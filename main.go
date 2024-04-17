@@ -13,9 +13,14 @@ var (
 	running         = true
 	backgroundColor = rl.NewColor(147, 211, 196, 255)
 
-	playerSprite rl.Texture2D
-	playerSrc    rl.Rectangle
-	playerDest   rl.Rectangle
+	playerSprite                                  rl.Texture2D
+	playerSrc                                     rl.Rectangle
+	playerDest                                    rl.Rectangle
+	playerMoving                                  bool
+	playerDirection                               int
+	playerUp, playerDown, playerRight, playerLeft bool
+	playerFrame                                   int
+	frameCount                                    int
 
 	musicPaused bool
 	music       rl.Music
@@ -34,16 +39,24 @@ func drawScene() {
 
 func input() {
 	if rl.IsKeyDown(rl.KeyW) || rl.IsKeyDown(rl.KeyUp) {
-		playerDest.Y -= playerSpeed
+		playerMoving = true
+		playerDirection = 1
+		playerUp = true
 	}
 	if rl.IsKeyDown(rl.KeyS) || rl.IsKeyDown(rl.KeyDown) {
-		playerDest.Y += playerSpeed
+		playerMoving = true
+		playerDirection = 0
+		playerDown = true
 	}
 	if rl.IsKeyDown(rl.KeyA) || rl.IsKeyDown(rl.KeyLeft) {
-		playerDest.X -= playerSpeed
+		playerMoving = true
+		playerDirection = 2
+		playerLeft = true
 	}
 	if rl.IsKeyDown(rl.KeyD) || rl.IsKeyDown(rl.KeyRight) {
-		playerDest.X += playerSpeed
+		playerMoving = true
+		playerDirection = 3
+		playerRight = true
 	}
 
 	if rl.IsKeyPressed(rl.KeyQ) {
@@ -52,6 +65,36 @@ func input() {
 }
 func update() {
 	running = !rl.WindowShouldClose()
+
+	playerSrc.X = 0
+
+	if playerMoving {
+		if playerUp {
+			playerDest.Y -= playerSpeed
+		}
+		if playerDown {
+			playerDest.Y += playerSpeed
+		}
+		if playerRight {
+			playerDest.X += playerSpeed
+		}
+		if playerLeft {
+			playerDest.X -= playerSpeed
+		}
+
+		if frameCount%8 == 1 {
+			playerFrame++
+		}
+
+		playerSrc.X = playerSrc.Width * float32(playerFrame)
+	}
+
+	frameCount++
+	if playerFrame > 3 {
+		playerFrame = 0
+	}
+
+	playerSrc.Y = playerSrc.Height * float32(playerDirection)
 
 	rl.UpdateMusicStream(music)
 	if musicPaused {
@@ -64,6 +107,9 @@ func update() {
 		float32(playerDest.X-(playerDest.Width/2)),
 		float32(playerDest.Y-(playerDest.Height/2)),
 	)
+
+	playerMoving = false
+	playerUp, playerDown, playerRight, playerLeft = false, false, false, false
 
 }
 
