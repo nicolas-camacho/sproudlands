@@ -21,6 +21,7 @@ var (
 	playerUp, playerDown, playerRight, playerLeft bool
 	playerFrame                                   int
 	frameCount                                    int
+	musicVolume                                   float32
 
 	musicPaused bool
 	music       rl.Music
@@ -66,7 +67,7 @@ func input() {
 func update() {
 	running = !rl.WindowShouldClose()
 
-	playerSrc.X = 0
+	playerSrc.X = playerSrc.Width * float32(playerFrame)
 
 	if playerMoving {
 		if playerUp {
@@ -85,8 +86,8 @@ func update() {
 		if frameCount%8 == 1 {
 			playerFrame++
 		}
-
-		playerSrc.X = playerSrc.Width * float32(playerFrame)
+	} else if frameCount%16 == 1 {
+		playerFrame++
 	}
 
 	frameCount++
@@ -94,6 +95,11 @@ func update() {
 		playerFrame = 0
 	}
 
+	if !playerMoving && playerFrame > 1 {
+		playerFrame = 0
+	}
+
+	playerSrc.X = playerSrc.Width * float32(playerFrame)
 	playerSrc.Y = playerSrc.Height * float32(playerDirection)
 
 	rl.UpdateMusicStream(music)
@@ -144,6 +150,8 @@ func init() {
 	rl.InitAudioDevice()
 	music = rl.LoadMusicStream("resources/music/AveryFarm.mp3")
 	musicPaused = false
+	musicVolume = 0.1
+	rl.SetMusicVolume(music, musicVolume)
 	rl.PlayMusicStream(music)
 
 	cam = rl.NewCamera2D(
@@ -157,6 +165,7 @@ func init() {
 }
 
 func main() {
+	defer quit()
 
 	for running {
 		input()
