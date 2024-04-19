@@ -21,15 +21,38 @@ var (
 	playerUp, playerDown, playerRight, playerLeft bool
 	playerFrame                                   int
 	frameCount                                    int
-	musicVolume                                   float32
 
+	musicVolume float32
 	musicPaused bool
 	music       rl.Music
 
 	cam rl.Camera2D
+
+	grassSprite         rl.Texture2D
+	tileDest            rl.Rectangle
+	tileSrc             rl.Rectangle
+	tileMap             []int
+	srcMap              []string
+	mapWidth, mapHeight int
 )
 
 func drawScene() {
+	for i := 0; i < len(tileMap); i++ {
+		if tileMap[i] != 0 {
+			tileDest.X = tileDest.Width * float32(i%mapWidth)
+			tileDest.Y = tileDest.Height * float32(i/mapWidth)
+			tileSrc.X = tileSrc.Width * float32((tileMap[i]-1)%int(grassSprite.Width/int32(tileSrc.Width)))
+			tileSrc.Y = tileSrc.Height * float32((tileMap[i]-1)/int(grassSprite.Width/int32(tileSrc.Width)))
+		}
+	}
+
+	rl.DrawTexturePro(
+		grassSprite,
+		tileSrc, tileDest,
+		rl.NewVector2(tileDest.Width, tileDest.Height),
+		0,
+		rl.White)
+
 	rl.DrawTexturePro(
 		playerSprite,
 		playerSrc, playerDest,
@@ -137,14 +160,27 @@ func quit() {
 	rl.CloseWindow()
 }
 
+func loadMap() {
+	mapWidth = 5
+	mapHeight = 5
+	for i := 0; i < (mapWidth * mapHeight); i++ {
+		tileMap = append(tileMap, 2)
+	}
+}
+
 func init() {
 	rl.InitWindow(screenWidth, screenHeight, "Sproudlands")
 	rl.SetExitKey(0)
 	rl.SetTargetFPS(fps)
 
-	playerSprite = rl.LoadTexture("resources/Characters/PlayerSpritesheet.png")
+	grassSprite = rl.LoadTexture("resources/Tilesets/Grass.png")
 
-	playerSrc = rl.NewRectangle(0, 0, 48, 48)
+	tileDest = rl.NewRectangle(0, 0, 16, 16)
+	tileSrc = rl.NewRectangle(0, 0, 16, 16)
+
+	playerSprite = rl.LoadTexture("resources/Characters/PlayerSpritesheetRendererBig.png")
+
+	playerSrc = rl.NewRectangle(0, 0, 192, 192)
 	playerDest = rl.NewRectangle(200, 200, 100, 100)
 
 	rl.InitAudioDevice()
@@ -162,6 +198,8 @@ func init() {
 		),
 		0.0,
 		1.0)
+
+	loadMap()
 }
 
 func main() {
