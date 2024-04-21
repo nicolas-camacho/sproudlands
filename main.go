@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sproudlands/music"
 	"strconv"
 	"strings"
 
@@ -29,10 +30,6 @@ var (
 	playerUp, playerDown, playerRight, playerLeft bool
 	playerFrame                                   int
 	frameCount                                    int
-
-	musicVolume float32
-	musicPaused bool
-	music       rl.Music
 
 	cam rl.Camera2D
 
@@ -101,10 +98,9 @@ func input() {
 		playerRight = true
 	}
 
-	if rl.IsKeyPressed(rl.KeyQ) {
-		musicPaused = !musicPaused
-	}
+	music.InputHandler()
 }
+
 func update() {
 	running = !rl.WindowShouldClose()
 
@@ -114,7 +110,7 @@ func update() {
 		if playerUp && playerDest.Y > 16 {
 			playerDest.Y -= playerSpeed
 		}
-		if playerDown && playerDest.Y < float32(16*(mapHeight-1)) {
+		if playerDown && playerDest.Y < 16*(float32(mapHeight)-0.8) {
 			playerDest.Y += playerSpeed
 		}
 		if playerRight && playerDest.X < float32(16*mapWidth) {
@@ -143,12 +139,7 @@ func update() {
 	playerSrc.X = playerSrc.Width * float32(playerFrame)
 	playerSrc.Y = playerSrc.Height * float32(playerDirection)
 
-	rl.UpdateMusicStream(music)
-	if musicPaused {
-		rl.PauseMusicStream(music)
-	} else {
-		rl.ResumeMusicStream(music)
-	}
+	music.Update()
 
 	cam.Target = rl.NewVector2(
 		float32(playerDest.X-(playerDest.Width/2)),
@@ -173,8 +164,7 @@ func render() {
 
 func quit() {
 	rl.UnloadTexture(playerSprite)
-	rl.UnloadMusicStream(music)
-	rl.CloseAudioDevice()
+	music.Unload()
 	rl.CloseWindow()
 }
 
@@ -230,12 +220,7 @@ func init() {
 	playerSrc = rl.NewRectangle(0, 0, 192, 192)
 	playerDest = rl.NewRectangle(200, 200, 60, 60)
 
-	rl.InitAudioDevice()
-	music = rl.LoadMusicStream("resources/music/AveryFarm.mp3")
-	musicPaused = false
-	musicVolume = 0.1
-	rl.SetMusicVolume(music, musicVolume)
-	rl.PlayMusicStream(music)
+	music.SetInitialValues()
 
 	cam = rl.NewCamera2D(
 		rl.NewVector2(float32(screenWidth/2), float32(screenHeight/2)),
@@ -246,9 +231,9 @@ func init() {
 		0.0,
 		1.0)
 
-	// cam.Zoom = 3
+	cam.Zoom = 2
 
-	loadMap("one.map")
+	loadMap("maps/one.map")
 }
 
 func main() {
