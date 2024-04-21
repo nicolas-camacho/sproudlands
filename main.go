@@ -1,6 +1,14 @@
 package main
 
-import rl "github.com/gen2brain/raylib-go/raylib"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
+)
 
 const (
 	screenWidth          = 1000
@@ -29,6 +37,8 @@ var (
 	cam rl.Camera2D
 
 	grassSprite         rl.Texture2D
+	hillSprite          rl.Texture2D
+	texture             rl.Texture2D
 	tileDest            rl.Rectangle
 	tileSrc             rl.Rectangle
 	tileMap             []int
@@ -41,17 +51,25 @@ func drawScene() {
 		if tileMap[i] != 0 {
 			tileDest.X = tileDest.Width * float32(i%mapWidth)
 			tileDest.Y = tileDest.Height * float32(i/mapWidth)
-			tileSrc.X = tileSrc.Width * float32((tileMap[i]-1)%int(grassSprite.Width/int32(tileSrc.Width)))
-			tileSrc.Y = tileSrc.Height * float32((tileMap[i]-1)/int(grassSprite.Width/int32(tileSrc.Width)))
+
+			switch srcMap[i] {
+			case "h":
+				texture = hillSprite
+			default:
+				texture = grassSprite
+			}
+
+			tileSrc.X = tileSrc.Width * float32((tileMap[i]-1)%int(texture.Width/int32(tileSrc.Width)))
+			tileSrc.Y = tileSrc.Height * float32((tileMap[i]-1)/int(texture.Width/int32(tileSrc.Width)))
+
+			rl.DrawTexturePro(
+				texture,
+				tileSrc, tileDest,
+				rl.NewVector2(tileDest.Width, tileDest.Height),
+				0,
+				rl.White)
 		}
 	}
-
-	rl.DrawTexturePro(
-		grassSprite,
-		tileSrc, tileDest,
-		rl.NewVector2(tileDest.Width, tileDest.Height),
-		0,
-		rl.White)
 
 	rl.DrawTexturePro(
 		playerSprite,
@@ -160,11 +178,39 @@ func quit() {
 	rl.CloseWindow()
 }
 
-func loadMap() {
-	mapWidth = 5
-	mapHeight = 5
-	for i := 0; i < (mapWidth * mapHeight); i++ {
-		tileMap = append(tileMap, 2)
+func loadMap(mapFile string) {
+	file, err := os.Open(mapFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+
+	var tileList []string
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fields := strings.Split(scanner.Text(), " ")
+		tileList = append(tileList, fields...)
+	}
+
+	mapWidth, mapHeight = -1, -1
+
+	for _, s := range tileList {
+		m, err := strconv.Atoi(s)
+		if err != nil {
+			srcMap = append(srcMap, s)
+			continue
+		}
+		if mapWidth == -1 {
+			mapWidth = m
+		} else if mapHeight == -1 {
+			mapHeight = m
+		} else {
+			tileMap = append(tileMap, m+1)
+		}
+	}
+	if len(tileMap) > mapWidth*mapHeight {
+		tileMap = tileMap[:len(tileMap)-1]
 	}
 }
 
@@ -174,14 +220,15 @@ func init() {
 	rl.SetTargetFPS(fps)
 
 	grassSprite = rl.LoadTexture("resources/Tilesets/Grass.png")
+	hillSprite = rl.LoadTexture("resources/Tilesets/Hills.png")
 
-	tileDest = rl.NewRectangle(0, 0, 16, 16)
 	tileSrc = rl.NewRectangle(0, 0, 16, 16)
+	tileDest = rl.NewRectangle(0, 0, 16, 16)
 
 	playerSprite = rl.LoadTexture("resources/Characters/PlayerSpritesheetRendererBig.png")
 
 	playerSrc = rl.NewRectangle(0, 0, 192, 192)
-	playerDest = rl.NewRectangle(200, 200, 100, 100)
+	playerDest = rl.NewRectangle(200, 200, 60, 60)
 
 	rl.InitAudioDevice()
 	music = rl.LoadMusicStream("resources/music/AveryFarm.mp3")
@@ -199,7 +246,9 @@ func init() {
 		0.0,
 		1.0)
 
-	loadMap()
+	// cam.Zoom = 3
+
+	loadMap("one.map")
 }
 
 func main() {
