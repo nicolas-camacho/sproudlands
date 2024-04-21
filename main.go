@@ -111,16 +111,16 @@ func update() {
 	playerSrc.X = playerSrc.Width * float32(playerFrame)
 
 	if playerMoving {
-		if playerUp {
+		if playerUp && playerDest.Y > 16 {
 			playerDest.Y -= playerSpeed
 		}
-		if playerDown {
+		if playerDown && playerDest.Y < float32(16*(mapHeight-1)) {
 			playerDest.Y += playerSpeed
 		}
-		if playerRight {
+		if playerRight && playerDest.X < float32(16*mapWidth) {
 			playerDest.X += playerSpeed
 		}
-		if playerLeft {
+		if playerLeft && playerDest.X > 16*1.8 {
 			playerDest.X -= playerSpeed
 		}
 
