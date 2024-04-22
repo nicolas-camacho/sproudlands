@@ -38,39 +38,61 @@ var (
 	tileMap             []int
 	srcMap              []string
 	mapWidth, mapHeight int
+
+	chestSprite rl.Texture2D
+	chestSrc    rl.Rectangle
+	chestDest   rl.Rectangle
 )
 
 func drawScene() {
-	for i := 0; i < len(tileMap); i++ {
-		if tileMap[i] != 0 {
-			tileDest.X = tileDest.Width * float32(i%mapWidth)
-			tileDest.Y = tileDest.Height * float32(i/mapWidth)
 
-			switch srcMap[i] {
-			case "h":
-				texture = hillSprite
-			default:
-				texture = grassSprite
-			}
+	for i, tile := range tileMap {
+		tileDest.X = (float32(i%mapWidth) * 16) + (SCREENWIDTH / 2) - float32((mapWidth*16)/2)
+		tileDest.Y = (float32(i/mapWidth) * 16) + (SCREENHEIGHT / 2) - float32((mapHeight*16)/2)
 
-			tileSrc.X = tileSrc.Width * float32((tileMap[i]-1)%int(texture.Width/int32(tileSrc.Width)))
-			tileSrc.Y = tileSrc.Height * float32((tileMap[i]-1)/int(texture.Width/int32(tileSrc.Width)))
-
-			rl.DrawTexturePro(
-				texture,
-				tileSrc, tileDest,
-				rl.NewVector2(tileDest.Width, tileDest.Height),
-				0,
-				rl.White)
+		switch srcMap[i] {
+		case "h":
+			texture = hillSprite
+		default:
+			texture = grassSprite
 		}
+
+		tileSrc.X = tileSrc.Width * float32((tile-1)%int(texture.Width/int32(tileSrc.Width)))
+		tileSrc.Y = tileSrc.Height * float32((tile-1)/int(texture.Width/int32(tileSrc.Width)))
+
+		rl.DrawTexturePro(
+			texture,
+			tileSrc,
+			tileDest,
+			rl.NewVector2(0, 0),
+			0,
+			rl.White,
+		)
 	}
 
 	rl.DrawTexturePro(
 		playerSprite,
 		playerSrc, playerDest,
-		rl.NewVector2(playerDest.Width, playerDest.Height),
+		rl.NewVector2(0, 0),
 		0,
-		rl.White)
+		rl.White,
+	)
+
+	rl.DrawRectangleLines(playerDest.ToInt32().X+16, playerDest.ToInt32().Y+16, 16, 16, rl.Red)
+
+	/*
+
+		rl.DrawTexturePro(
+			chestSprite,
+			chestSrc,
+			chestDest,
+			rl.NewVector2(chestDest.Width, chestDest.Height),
+			0,
+			rl.White,
+		)
+	*/
+
+	rl.DrawText("Score", int32(playerDest.X)-((SCREENWIDTH+60)/4), int32(playerDest.Y)-((SCREENHEIGHT+60)/4), 8, rl.White)
 }
 
 func Input() {
@@ -104,16 +126,16 @@ func Update(running *bool) {
 	playerSrc.X = playerSrc.Width * float32(playerFrame)
 
 	if playerMoving {
-		if playerUp && playerDest.Y > 16 {
+		if playerUp && playerDest.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2) {
 			playerDest.Y -= PLAYERSPEED
 		}
-		if playerDown && playerDest.Y < 16*(float32(mapHeight)-0.8) {
+		if playerDown && playerDest.Y < float32((0*mapHeight-2)*16)+SCREENHEIGHT/2+float32(((mapHeight-2)*16)/2) {
 			playerDest.Y += PLAYERSPEED
 		}
-		if playerRight && playerDest.X < float32(16*mapWidth) {
+		if playerRight && (playerDest.X+48) < float32((0*mapWidth)*16)+15+SCREENWIDTH/2+float32(((mapWidth)*16)/2) {
 			playerDest.X += PLAYERSPEED
 		}
-		if playerLeft && playerDest.X > 16*1.8 {
+		if playerLeft && playerDest.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2) {
 			playerDest.X -= PLAYERSPEED
 		}
 
@@ -139,6 +161,10 @@ func Update(running *bool) {
 	music.Update()
 
 	updateCamera()
+
+	if rl.CheckCollisionRecs(chestDest, playerDest) {
+		fmt.Println("Touching")
+	}
 
 	playerMoving = false
 	playerUp, playerDown, playerRight, playerLeft = false, false, false, false
@@ -209,10 +235,17 @@ func Init() {
 	tileSrc = rl.NewRectangle(0, 0, 16, 16)
 	tileDest = rl.NewRectangle(0, 0, 16, 16)
 
-	playerSprite = rl.LoadTexture("resources/Characters/PlayerSpritesheetRendererBig.png")
+	playerSprite = rl.LoadTexture("resources/Characters/PlayerSpritesheet.png")
 
-	playerSrc = rl.NewRectangle(0, 0, 192, 192)
-	playerDest = rl.NewRectangle(200, 200, 60, 60)
+	playerSrc = rl.NewRectangle(0, 0, 48, 48)
+	playerDest = rl.NewRectangle((SCREENWIDTH/2)-24, (SCREENHEIGHT/2)-24, 48, 48)
+
+	/*
+		chestSprite = rl.LoadTexture("resources/Objects/Chest.png")
+
+		chestSrc = rl.NewRectangle(0, 0, 48, 48)
+		chestDest = rl.NewRectangle(16, 16, 48, 48)
+	*/
 
 	music.SetInitialValues()
 
