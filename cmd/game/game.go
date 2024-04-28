@@ -126,7 +126,7 @@ func Update(running *bool) {
 	playerSrc.X = playerSrc.Width * float32(playerFrame)
 
 	if playerMoving {
-		if playerUp && playerDest.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2) {
+		if playerUp && playerDest.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2)-15 {
 			playerDest.Y -= PLAYERSPEED
 		}
 		if playerDown && playerDest.Y < float32((0*mapHeight-2)*16)+SCREENHEIGHT/2+float32(((mapHeight-2)*16)/2) {
@@ -135,7 +135,7 @@ func Update(running *bool) {
 		if playerRight && (playerDest.X+48) < float32((0*mapWidth)*16)+15+SCREENWIDTH/2+float32(((mapWidth)*16)/2) {
 			playerDest.X += PLAYERSPEED
 		}
-		if playerLeft && playerDest.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2) {
+		if playerLeft && playerDest.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2)-6 {
 			playerDest.X -= PLAYERSPEED
 		}
 
