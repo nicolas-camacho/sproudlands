@@ -106,6 +106,22 @@ func Input() {
 		player.right = true
 	}
 
+	if rl.IsKeyPressed(rl.KeyZ) {
+		fmt.Println("key pressed")
+		if player.direction == 1 && !calculateCollision(Y, -PLAYERSPEED) {
+			fmt.Println("checking chest")
+		}
+		if player.direction == 0 && !calculateCollision(Y, PLAYERSPEED) {
+			fmt.Println("checking chest")
+		}
+		if player.direction == 3 && !calculateCollision(X, PLAYERSPEED) {
+			fmt.Println("checking chest")
+		}
+		if player.direction == 2 && !calculateCollision(X, -PLAYERSPEED) {
+			fmt.Println("checking chest")
+		}
+	}
+
 	music.InputHandler()
 }
 
