@@ -32,9 +32,7 @@ var (
 	srcMap              []string
 	mapWidth, mapHeight int
 
-	chestSprite rl.Texture2D
-	chestSrc    rl.Rectangle
-	chestDest   rl.Rectangle
+	chest Object
 )
 
 func drawScene() {
@@ -71,19 +69,17 @@ func drawScene() {
 		rl.White,
 	)
 
-	rl.DrawRectangleLines(player.destination.ToInt32().X+16, player.destination.ToInt32().Y+16, 16, 16, rl.Red)
+	rl.DrawRectangleLines(player.collision.ToInt32().X, player.collision.ToInt32().Y, 16, 16, rl.Red)
 
-	/*
+	rl.DrawTexturePro(chest.texture, chest.source, chest.destination, rl.NewVector2(0, 0), 0, rl.White)
 
-		rl.DrawTexturePro(
-			chestSprite,
-			chestSrc,
-			chestDest,
-			rl.NewVector2(chestDest.Width, chestDest.Height),
-			0,
-			rl.White,
-		)
-	*/
+	rl.DrawRectangleLines(
+		chest.collision.ToInt32().X,
+		chest.collision.ToInt32().Y,
+		16,
+		16,
+		rl.Red,
+	)
 
 	rl.DrawText("Score", int32(player.destination.X)-((SCREENWIDTH+60)/4), int32(player.destination.Y)-((SCREENHEIGHT+60)/4), 8, rl.White)
 }
@@ -113,22 +109,51 @@ func Input() {
 	music.InputHandler()
 }
 
+func calculatePlayerUp() bool {
+	return player.up && player.destination.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2)-15
+}
+
+func calculatePlayerDown() bool {
+	return player.down && player.destination.Y < float32((0*mapHeight-2)*16)+SCREENHEIGHT/2+float32(((mapHeight-2)*16)/2)
+}
+
+func calculatePlayerRight() bool {
+	return player.right && (player.destination.X+48) < float32((0*mapWidth)*16)+15+SCREENWIDTH/2+float32(((mapWidth)*16)/2)
+}
+
+func calculatePlayerLeft() bool {
+	return player.left && player.destination.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2)-6
+}
+
+func calculateCollision(axis Axis, value float32) bool {
+	var nextPlayerPosition rl.Rectangle
+	if axis == X {
+		nextPlayerPosition = rl.NewRectangle(player.collision.X+value, player.collision.Y, player.collision.Width, player.collision.Height)
+	}
+	if axis == Y {
+		nextPlayerPosition = rl.NewRectangle(player.collision.X, player.collision.Y+value, player.collision.Width, player.collision.Height)
+	}
+	return !rl.CheckCollisionRecs(nextPlayerPosition, chest.collision)
+}
+
 func Update(running *bool) {
 	*running = !rl.WindowShouldClose()
 
 	player.source.X = player.source.Width * float32(player.frame)
+	player.collision.X = player.destination.X + 16
+	player.collision.Y = player.destination.Y + 16
 
 	if player.moving {
-		if player.up && player.destination.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2)-15 {
+		if calculatePlayerUp() && calculateCollision(Y, -PLAYERSPEED) {
 			player.Move(Y, -PLAYERSPEED)
 		}
-		if player.down && player.destination.Y < float32((0*mapHeight-2)*16)+SCREENHEIGHT/2+float32(((mapHeight-2)*16)/2) {
+		if calculatePlayerDown() && calculateCollision(Y, PLAYERSPEED) {
 			player.Move(Y, PLAYERSPEED)
 		}
-		if player.right && (player.destination.X+48) < float32((0*mapWidth)*16)+15+SCREENWIDTH/2+float32(((mapWidth)*16)/2) {
+		if calculatePlayerRight() && calculateCollision(X, PLAYERSPEED) {
 			player.Move(X, PLAYERSPEED)
 		}
-		if player.left && player.destination.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2)-6 {
+		if calculatePlayerLeft() && calculateCollision(X, -PLAYERSPEED) {
 			player.Move(X, -PLAYERSPEED)
 		}
 
@@ -226,16 +251,15 @@ func Init() {
 
 	player = NewPlayer()
 
-	/*
-		chestSprite = rl.LoadTexture("resources/Objects/Chest.png")
-
-		chestSrc = rl.NewRectangle(0, 0, 48, 48)
-		chestDest = rl.NewRectangle(16, 16, 48, 48)
-	*/
-
 	music.SetInitialValues()
 
 	createCamera()
 
 	loadMap("maps/one.map")
+
+	chest = NewObject(
+		"resources/Objects/Chest.png",
+		(float32(0%mapWidth)*16)+(SCREENWIDTH/2)-float32((mapWidth*16)/2),
+		(float32(0/mapWidth)*16)+(SCREENHEIGHT/2)-float32((mapHeight*16)/2),
+	)
 }

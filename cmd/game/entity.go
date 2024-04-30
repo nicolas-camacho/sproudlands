@@ -36,8 +36,9 @@ func NewPlayer() Player {
 		texture:     rl.LoadTexture("resources/Characters/PlayerSpritesheet.png"),
 		source:      rl.NewRectangle(0, 0, 48, 48),
 		destination: rl.NewRectangle((SCREENWIDTH/2)-24, (SCREENHEIGHT/2)-24, 48, 48),
-		collision:   rl.NewRectangle(player.destination.X+16, player.destination.Y+16, 16, 16),
 	}
+
+	base.collision = rl.NewRectangle(base.destination.X+16, base.destination.Y+16, 16, 16)
 
 	return Player{
 		base,
