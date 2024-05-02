@@ -32,7 +32,8 @@ var (
 	srcMap              []string
 	mapWidth, mapHeight int
 
-	chest Object
+	chest     Object
+	obstacles []Object
 )
 
 func drawScene() {
@@ -108,16 +109,16 @@ func Input() {
 
 	if rl.IsKeyPressed(rl.KeyZ) {
 		fmt.Println("key pressed")
-		if player.direction == 1 && !calculateCollision(Y, -PLAYERSPEED) {
+		if player.direction == 1 && player.Collide(Y, -PLAYERSPEED) {
 			fmt.Println("checking chest")
 		}
-		if player.direction == 0 && !calculateCollision(Y, PLAYERSPEED) {
+		if player.direction == 0 && player.Collide(Y, PLAYERSPEED) {
 			fmt.Println("checking chest")
 		}
-		if player.direction == 3 && !calculateCollision(X, PLAYERSPEED) {
+		if player.direction == 3 && player.Collide(X, PLAYERSPEED) {
 			fmt.Println("checking chest")
 		}
-		if player.direction == 2 && !calculateCollision(X, -PLAYERSPEED) {
+		if player.direction == 2 && player.Collide(X, -PLAYERSPEED) {
 			fmt.Println("checking chest")
 		}
 	}
@@ -125,31 +126,20 @@ func Input() {
 	music.InputHandler()
 }
 
-func calculatePlayerUp() bool {
+func notPassLimitUp() bool {
 	return player.up && player.destination.Y > float32((0*mapHeight-1)*16)+SCREENHEIGHT/2-float32(((mapHeight-1)*16)/2)-15
 }
 
-func calculatePlayerDown() bool {
+func notPassLimitDown() bool {
 	return player.down && player.destination.Y < float32((0*mapHeight-2)*16)+SCREENHEIGHT/2+float32(((mapHeight-2)*16)/2)
 }
 
-func calculatePlayerRight() bool {
+func notPassLimitRight() bool {
 	return player.right && (player.destination.X+48) < float32((0*mapWidth)*16)+15+SCREENWIDTH/2+float32(((mapWidth)*16)/2)
 }
 
-func calculatePlayerLeft() bool {
+func notPassLimitLeft() bool {
 	return player.left && player.destination.X > float32((0*mapWidth-1)*16)+SCREENWIDTH/2-float32(((mapWidth-1)*16)/2)-6
-}
-
-func calculateCollision(axis Axis, value float32) bool {
-	var nextPlayerPosition rl.Rectangle
-	if axis == X {
-		nextPlayerPosition = rl.NewRectangle(player.collision.X+value, player.collision.Y, player.collision.Width, player.collision.Height)
-	}
-	if axis == Y {
-		nextPlayerPosition = rl.NewRectangle(player.collision.X, player.collision.Y+value, player.collision.Width, player.collision.Height)
-	}
-	return !rl.CheckCollisionRecs(nextPlayerPosition, chest.collision)
 }
 
 func Update(running *bool) {
@@ -160,16 +150,16 @@ func Update(running *bool) {
 	player.collision.Y = player.destination.Y + 16
 
 	if player.moving {
-		if calculatePlayerUp() && calculateCollision(Y, -PLAYERSPEED) {
+		if notPassLimitUp() {
 			player.Move(Y, -PLAYERSPEED)
 		}
-		if calculatePlayerDown() && calculateCollision(Y, PLAYERSPEED) {
+		if notPassLimitDown() {
 			player.Move(Y, PLAYERSPEED)
 		}
-		if calculatePlayerRight() && calculateCollision(X, PLAYERSPEED) {
+		if notPassLimitRight() {
 			player.Move(X, PLAYERSPEED)
 		}
-		if calculatePlayerLeft() && calculateCollision(X, -PLAYERSPEED) {
+		if notPassLimitLeft() {
 			player.Move(X, -PLAYERSPEED)
 		}
 
@@ -278,4 +268,5 @@ func Init() {
 		(float32(0%mapWidth)*16)+(SCREENWIDTH/2)-float32((mapWidth*16)/2),
 		(float32(0/mapWidth)*16)+(SCREENHEIGHT/2)-float32((mapHeight*16)/2),
 	)
+	obstacles = append(obstacles, chest)
 }

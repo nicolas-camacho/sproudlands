@@ -22,12 +22,33 @@ type Player struct {
 	Entity
 }
 
-func (player *Player) Move(axis Axis, speed float32) {
+func (player *Player) Collide(axis Axis, speed float32) bool {
+	var nextPlayerPosition rl.Rectangle
+	var colliding bool
 	if axis == X {
-		player.destination.X += speed
+		nextPlayerPosition = rl.NewRectangle(player.collision.X+speed, player.collision.Y, player.collision.Width, player.collision.Height)
 	}
 	if axis == Y {
-		player.destination.Y += speed
+		nextPlayerPosition = rl.NewRectangle(player.collision.X, player.collision.Y+speed, player.collision.Width, player.collision.Height)
+	}
+
+	for _, obstacle := range obstacles {
+		if rl.CheckCollisionRecs(nextPlayerPosition, obstacle.collision) {
+			colliding = true
+			break
+		}
+	}
+	return colliding
+}
+
+func (player *Player) Move(axis Axis, speed float32) {
+	if !player.Collide(axis, speed) {
+		if axis == X {
+			player.destination.X += speed
+		}
+		if axis == Y {
+			player.destination.Y += speed
+		}
 	}
 }
 
